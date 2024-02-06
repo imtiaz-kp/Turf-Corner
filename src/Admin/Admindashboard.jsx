@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Header from '../components/Header'
 import { Link } from 'react-router-dom'
 import { BASE_URL } from '../Services/baseurl';
-import { editTurfProfileAPI } from '../Services/allAPI';
+import { editTurfOwnerProfileAPI, editTurfProfileAPI } from '../Services/allAPI';
 
 function Admindashboard() {
     const [existingImage, setExistingImage] = useState("");
@@ -10,12 +10,14 @@ function Admindashboard() {
     const [existingImage2, setExistingImage2] = useState("");
     const [preview2, setPreview2] = useState("");
     const [userProfile, setUserProfile] = useState({
-        username: "", turfname: "", regno: "", email: "", turfemail: "", password: "", phon: "", turflocation: "",profile:"", id: ""
+        username: "", turfname: "", regno: "", email: "", turfemail: "", password: "", phon: "", turflocation: "",profile:"",profile2:"", id: ""
     });
     useEffect(() => {
         const user = JSON.parse(sessionStorage.getItem("existingUser"));
-        setUserProfile({ ...userProfile, username: user.username, turfname: user.turfname, regno: user.regno, email: user.email, turfemail: user.turfemail, password: user.password, phon: user.phon, turflocation: user.turflocation,profile:"", id: user._id });
+        setUserProfile({ ...userProfile, username: user.username, turfname: user.turfname, regno: user.regno, email: user.email, turfemail: user.turfemail, password: user.password, phon: user.phon, turflocation: user.turflocation,profile:"",profile2:"", id: user._id });
         setExistingImage(user.profile); 
+        setExistingImage2(user.profile2); 
+
     }, []);
  useEffect(() => {
     if (userProfile.profile) {
@@ -23,7 +25,67 @@ function Admindashboard() {
     } else {
       setPreview("");
     }
-  }, [userProfile.profile]);
+    if (userProfile.profile2) {
+        setPreview2(URL.createObjectURL(userProfile.profile2));
+      } else {
+        setPreview2("");
+      }
+  }, [userProfile.profile,userProfile.profile2]);
+
+ const handleOwnerProfileUpdate = async ()=>{
+    const {username,email,phon,profile2}=userProfile
+    if(!username||!email||!phon){
+        alert("fill the form completely");
+    }else{
+        const reqBody= new FormData();
+        reqBody.append("username",username)
+        reqBody.append("email",email)
+        reqBody.append("phon",phon)
+        preview2 ? reqBody.append("profile2", profile2) : reqBody.append("profile2", existingImage2);
+        const token = sessionStorage.getItem("token");
+
+        if (preview2) {
+            const reqHeader = {
+              "Content-Type": "multipart/form-data",
+              "Authorization": `Bearer ${token}`
+            };
+    
+            try {
+              const result = await editTurfOwnerProfileAPI(reqBody, reqHeader);
+              if (result.status === 200) {
+                alert("updated successfully")
+                sessionStorage.setItem("existingUser", JSON.stringify(result.data));
+              } else {
+            
+                alert(result.response.data);
+              }
+            } catch (error) {
+              alert("Error updating profile:", error);
+            }
+          } else {
+            const reqHeader = {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            };
+    
+            try {
+              const result = await editTurfOwnerProfileAPI(reqBody, reqHeader);
+              if (result.status === 200) {
+                alert("updated successfully")
+                sessionStorage.setItem("existingUser", JSON.stringify(result.data));
+              } else {
+              
+             alert(result.response.data);
+              }
+            } catch (error) {
+              alert("Error updating profile:", error);
+            }
+          }
+
+
+    }
+ }
+
  
   const handleProfileUpdate = async () => {
     const { username, turfname, regno, email, turfemail, password,phon,turflocation,profile } = userProfile;
@@ -42,7 +104,7 @@ function Admindashboard() {
       preview ? reqBody.append("profile", profile) : reqBody.append("profile", existingImage);
 
       const token = sessionStorage.getItem("token");
-
+     
       if (preview) {
         const reqHeader = {
           "Content-Type": "multipart/form-data",
@@ -106,8 +168,8 @@ function Admindashboard() {
                             <label className='text-center'>
                                 <input id='profile' style={{ display: 'none' }} type="file" onChange={e => setUserProfile({ ...userProfile, profile: e.target.files[0] })}/>
                             {existingImage!==""?
-                                <img width={'500px'} height={'500px'} className='img-fluid container border rounded-3 p-1' src={preview ? preview : `${BASE_URL}/uploads/${existingImage}`} alt="upload picture" />:
-                                <img width={'500px'} height={'500px'} className='img-fluid container border rounded-3 p-1'  src={preview ? preview :`https://cricketgraph.com/wp-content/gallery/enc-sports-turf/ENC-Sports-Turf-Thane-West-10.jpg`} alt="upload picture" />
+                                <img width={'700px'} height={'300px'} className='  border rounded-3 p-1' src={preview ? preview : `${BASE_URL}/uploads/${existingImage}`} alt="upload picture" />:
+                                <img width={'700px'} height={'300px'} className='  border rounded-3 p-1'  src={preview ? preview :``} alt="upload picture" />
                             }
                             </label>
 
@@ -141,9 +203,9 @@ function Admindashboard() {
                             <div className=' rounded p-3 text-center' style={{ color: 'white', fontSize: '30px' }}>Owner Details</div>
 
                             <label className='text-center'>
-                                <input id='profile' style={{ display: 'none' }} type="file" />
+                                <input id='profile2' style={{ display: 'none' }} type="file" onChange={e => setUserProfile({ ...userProfile, profile2: e.target.files[0] })}/>
                                  
-                                {existingImage!==""?
+                                {existingImage2!==""?
                                 <img width={'200px'} height={'200px'}  className='rounded-circle' src={preview2 ? preview2 : `${BASE_URL}/uploads/${existingImage2}`} alt="upload picture" />:
                                 <img width={'200px'} height={'200px'}   className='rounded-circle' src={preview2 ? preview2 :`https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1vNcnuDrDcWb-fg4zotZPU0uoCCsO7j_T2BKFxdo6qASgQXXtIwcIjgDPbT7AnO505KE&usqp=CAU`} alt="upload picture" />
                             }
@@ -162,7 +224,7 @@ function Admindashboard() {
                             </div>
 
                             <div className='col-lg-12 mt-3 text-center'>
-                                <button type="text" className='btn btn-warning' onClick={handleProfileUpdate} >Update</button>
+                                <button type="text" className='btn btn-warning' onClick={handleOwnerProfileUpdate} >Update</button>
                             </div>
                         </div>
                         <div className='row'></div>

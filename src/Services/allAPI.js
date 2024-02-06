@@ -23,6 +23,12 @@ export const editTurfProfileAPI =async (reqBody,reqHeader)=>{
   return await commonAPI("PUT",`${BASE_URL}/profile/edit/`,reqBody,reqHeader)
 }
 
+//edit turf owner profile
+export const editTurfOwnerProfileAPI =async (reqBody,reqHeader)=>{
+  return await commonAPI("PUT",`${BASE_URL}/ownerprofile/edit/`,reqBody,reqHeader)
+}
+
+
 
 
 
